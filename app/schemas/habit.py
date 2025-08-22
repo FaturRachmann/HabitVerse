@@ -1,8 +1,9 @@
 # app/schemas/habit.py
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime, date
 from typing import Optional
 from app.db.models import HabitCategory, HabitFrequency, LogStatus, Mood
+from uuid import UUID
 
 class HabitBase(BaseModel):
     name: str
@@ -27,8 +28,8 @@ class HabitUpdate(BaseModel):
     is_active: Optional[bool] = None
 
 class HabitResponse(HabitBase):
-    id: str
-    user_id: str
+    id: UUID
+    user_id: UUID
     current_streak: int
     best_streak: int
     total_completions: int
@@ -36,8 +37,8 @@ class HabitResponse(HabitBase):
     created_at: datetime
     updated_at: datetime
     
-    class Config:
-        orm_mode = True
+    # Pydantic v2 ORM mode
+    model_config = ConfigDict(from_attributes=True)
 
 class HabitLogBase(BaseModel):
     status: LogStatus = LogStatus.COMPLETED
@@ -55,14 +56,14 @@ class HabitLogUpdate(BaseModel):
     note: Optional[str] = None
 
 class HabitLogResponse(HabitLogBase):
-    id: str
-    habit_id: str
+    id: UUID
+    habit_id: UUID
     date: date
     created_at: datetime
     updated_at: datetime
     
-    class Config:
-        orm_mode = True
+    # Pydantic v2 ORM mode
+    model_config = ConfigDict(from_attributes=True)
 
 class HabitAnalytics(BaseModel):
     total_days: int

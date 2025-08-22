@@ -4,6 +4,7 @@ from datetime import date, datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
+from uuid import UUID
 
 from app.core.database import get_db
 from app.core.security import get_current_user
@@ -25,7 +26,7 @@ async def get_habits(
         Habit.is_active == True
     ).all()
     
-    return [HabitResponse.from_orm(habit) for habit in habits]
+    return [HabitResponse.model_validate(habit) for habit in habits]
 
 @router.post("/", response_model=HabitResponse)
 async def create_habit(
@@ -43,11 +44,11 @@ async def create_habit(
     db.commit()
     db.refresh(db_habit)
     
-    return HabitResponse.from_orm(db_habit)
+    return HabitResponse.model_validate(db_habit)
 
 @router.get("/{habit_id}", response_model=HabitResponse)
 async def get_habit(
-    habit_id: str,
+    habit_id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -63,11 +64,11 @@ async def get_habit(
             detail="Habit not found"
         )
     
-    return HabitResponse.from_orm(habit)
+    return HabitResponse.model_validate(habit)
 
 @router.put("/{habit_id}", response_model=HabitResponse)
 async def update_habit(
-    habit_id: str,
+    habit_id: UUID,
     habit_update: HabitUpdate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -93,11 +94,11 @@ async def update_habit(
     db.commit()
     db.refresh(habit)
     
-    return HabitResponse.from_orm(habit)
+    return HabitResponse.model_validate(habit)
 
 @router.delete("/{habit_id}")
 async def delete_habit(
-    habit_id: str,
+    habit_id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -121,7 +122,7 @@ async def delete_habit(
 
 @router.post("/{habit_id}/log", response_model=HabitLogResponse)
 async def log_habit(
-    habit_id: str,
+    habit_id: UUID,
     log_data: HabitLogCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -179,11 +180,11 @@ async def log_habit(
         gamification = GamificationService(db)
         gamification.award_xp(current_user, 10, "habit_completion")
     
-    return HabitLogResponse.from_orm(log)
+    return HabitLogResponse.model_validate(log)
 
 @router.get("/{habit_id}/logs", response_model=List[HabitLogResponse])
 async def get_habit_logs(
-    habit_id: str,
+    habit_id: UUID,
     days: Optional[int] = 30,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -209,9 +210,9 @@ async def get_habit_logs(
         HabitLog.date >= start_date
     ).order_by(HabitLog.date.desc()).all()
     
-    return [HabitLogResponse.from_orm(log) for log in logs]
+    return [HabitLogResponse.model_validate(log) for log in logs]
 
-@router.get("/heatmap")
+@router.get("/stats/heatmap")
 async def get_heatmap(
     days: int = 180,
     current_user: User = Depends(get_current_user),

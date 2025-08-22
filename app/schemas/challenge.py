@@ -1,5 +1,5 @@
 # app/schemas/challenge.py
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime, date
 from typing import Optional, List
 from app.db.models import HabitCategory
@@ -37,8 +37,8 @@ class ChallengeMemberResponse(BaseModel):
     total_days: int
     joined_at: datetime
     
-    class Config:
-        orm_mode = True
+    # Pydantic v2 ORM mode
+    model_config = ConfigDict(from_attributes=True)
 
 class ChallengeResponse(ChallengeBase):
     id: str
@@ -49,5 +49,5 @@ class ChallengeResponse(ChallengeBase):
     updated_at: datetime
     members: Optional[List[ChallengeMemberResponse]] = None
     
-    class Config:
-        orm_mode = True
+    # Pydantic v2 ORM mode
+    model_config = ConfigDict(from_attributes=True)

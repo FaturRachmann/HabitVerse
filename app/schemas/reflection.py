@@ -1,5 +1,5 @@
 # app/schemas/reflection.py
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime, date
 from typing import Optional
 from app.db.models import Mood
@@ -30,5 +30,5 @@ class ReflectionResponse(ReflectionBase):
     created_at: datetime
     updated_at: datetime
     
-    class Config:
-        orm_mode = True
+    # Pydantic v2 ORM mode
+    model_config = ConfigDict(from_attributes=True)

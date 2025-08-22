@@ -17,7 +17,7 @@ def page_shell(title: str, body: str) -> str:
     <html lang=\"en\">
     <head>
       <meta charset=\"utf-8\">
-      <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
+      <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\">
       <title>{title} • HabitVerse</title>
       <script src=\"https://cdn.tailwindcss.com\"></script>
       <script src=\"https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js\"></script>
@@ -151,8 +151,8 @@ async def dashboard(
           <h2 class=\"text-lg font-semibold\">Kalender Aktivitas</h2>
           <div class=\"text-xs text-slate-500\" id=\"heatmap-legend\">Loading…</div>
         </div>
-        <div class=\"overflow-x-auto\">
-          <svg id=\"heatmap\" width=\"900\" height=\"140\" role=\"img\" aria-label=\"Calendar heatmap\"></svg>
+        <div class=\"overflow-x-auto\"> 
+          <svg id=\"heatmap\" viewBox=\"0 0 900 140\" preserveAspectRatio=\"xMidYMid meet\" style=\"width:100%; height:auto;\" role=\"img\" aria-label=\"Calendar heatmap\"></svg>
         </div>
       </div>
 
@@ -254,7 +254,7 @@ async def dashboard(
           if (!svg) return;
           legend.textContent = 'Loading…';
           try {{
-            const res = await fetch(`/api/habits/heatmap?days=${{days}}`);
+            const res = await fetch(`/api/habits/stats/heatmap?days=${{days}}`);
             if (!res.ok) throw new Error('failed');
             const payload = await res.json();
             const data = payload.data || [];
@@ -289,8 +289,10 @@ async def dashboard(
           const weeks = Math.ceil(dates.length / 7);
           const width = left + weeks * (cell + gap) + 20;
           const height = top + 7 * (cell + gap) + 20;
-          svg.setAttribute('width', width);
-          svg.setAttribute('height', height);
+          svg.setAttribute('viewBox', `0 0 ${{width}} ${{height}}`);
+          svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+          svg.style.width = '100%';
+          svg.style.height = 'auto';
           svg.innerHTML = '';
           // Month labels (approx, every 4 weeks)
           for (let w = 0; w < weeks; w += 4) {{
@@ -351,7 +353,7 @@ async def dashboard(
           }});
         }}
 
-        // Per-habit circular progress for today
+        // Per-habit circular progress for today + Complete action
         async function loadTodayProgress() {{
           const container = document.getElementById('today-progress'); if (!container) return;
           container.innerHTML = '';
@@ -360,7 +362,7 @@ async def dashboard(
             const habits = await res.json();
             const todayISO = new Date().toISOString().slice(0,10);
             for (const h of habits) {{
-              let count = 0; let target = h.target_per_day || 1;
+              let count = 0; let target = h.target_count || 1;
               try {{
                 const lr = await fetch(`/api/habits/${{h.id}}/logs?days=1`);
                 if (lr.ok) {{
@@ -382,7 +384,10 @@ async def dashboard(
                   <div class="text-sm font-medium truncate">${{h.name}}</div>
                   <div class="text-xs text-slate-500">${{count}} / ${{target}}</div>
                 </div>
-                <div class="ml-auto text-sm font-semibold">${{pct}}%</div>
+                <div class="ml-auto flex items-center gap-2">
+                  <div class="text-sm font-semibold min-w-[2.5rem] text-right">${{pct}}%</div>
+                  ${{pct < 100 ? `<button class=\"px-2 py-1 text-xs rounded-md btn-primary\" data-hid=\"${{h.id}}\">Complete</button>` : ''}}
+                </div>
               `;
               container.appendChild(card);
               // animate progress
@@ -390,6 +395,30 @@ async def dashboard(
               requestAnimationFrame(() => {{ fg.setAttribute('stroke-dashoffset', off); }});
               // small pop when completed
               if (pct >= 100) {{ card.classList.add('ring-2','ring-indigo-300'); setTimeout(()=>card.classList.remove('ring-2','ring-indigo-300'), 800); }}
+
+              // wire Complete button
+              const btn = card.querySelector('button[data-hid]');
+              if (btn) {{
+                btn.addEventListener('click', async () => {{
+                  const id = btn.getAttribute('data-hid');
+                  btn.disabled = true; btn.textContent = '...';
+                  try {{
+                    const r = await fetch(`/api/habits/${{id}}/log`, {{
+                      method: 'POST',
+                      headers: {{ 'Content-Type': 'application/json' }},
+                      body: JSON.stringify({{ status: 'completed', count: 1 }})
+                    }});
+                    if (!r.ok) throw new Error('log failed');
+                    confettiBurst(900);
+                    await loadHeatmap(182); // refresh heatmap as well
+                    await loadTodayProgress(); // re-render cards
+                  }} catch (e) {{
+                    alert('Gagal menandai selesai. Coba lagi.');
+                  }} finally {{
+                    // no re-enable; the list will re-render
+                  }}
+                }});
+              }}
             }}
           }} catch (e) {{
             container.innerHTML = '<div class="text-sm text-slate-500">Gagal memuat progres.</div>';
