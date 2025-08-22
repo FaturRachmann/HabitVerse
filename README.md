@@ -5,18 +5,23 @@ Pengguna dapat membuat kebiasaan, melacak progres harian, melihat kalender heatm
 
 ---
 Tampilan - Login
+
 <img width="215" height="466" alt="Login - HabitVerse" src="https://github.com/user-attachments/assets/af686210-02cb-4cdb-bfd5-af4c8ebd34d4" />
 
 Tampilan - Dashboard
+
 <img width="215" height="888" alt="Dashboard • HabitVerse (1)" src="https://github.com/user-attachments/assets/75b00011-7065-4b2b-b6c3-ecf99efc8685" />
 
 Tampilan - Habits
+
 <img width="215" height="466" alt="Habits • HabitVerse" src="https://github.com/user-attachments/assets/14a64589-4f7c-4e14-bc14-129102052862" />
 
 Tampilan - Community
+
 <img width="215" height="541" alt="Community • HabitVerse" src="https://github.com/user-attachments/assets/6dbc1f60-95e1-40cc-bc2d-5f81dded9d25" />
 
 Tampilan - AI Coach
+
 <img width="215" height="540" alt="AI Coach • HabitVerse" src="https://github.com/user-attachments/assets/fa5e49c1-17cd-4e84-920c-afb0e98cfd75" />
 
 ---
@@ -131,3 +136,4 @@ habitverse.db
 👥 Sharing progres komunitas
 📥 Import/Export data
 🌙 Dark mode
+
